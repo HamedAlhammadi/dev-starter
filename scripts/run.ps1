@@ -17,14 +17,32 @@ if (-not $java -or -not $javac) {
     exit 1
 }
 
-$versionOutput = (& java -version 2>&1 | Out-String)
-if ($versionOutput -notmatch 'version "(?<version>\d+)') {
-    Write-Error 'Could not determine the Java version.'
+# In Windows PowerShell 5.1, native stderr is treated as an error record when
+# ErrorActionPreference is Stop. Redirect java -version stderr to a file first.
+$versionFile = [System.IO.Path]::GetTempFileName()
+try {
+    & java -version 2> $versionFile
+    $versionOutput = Get-Content -Raw $versionFile
+} finally {
+    Remove-Item -Force -ErrorAction SilentlyContinue $versionFile
+}
+
+$versionMatch = [regex]::Match($versionOutput, 'version "(?<version>[^"]+)"')
+if (-not $versionMatch.Success) {
+    Write-Error 'Could not determine the Java version. Install Java 17 or newer and check your PATH.'
     exit 1
 }
-$javaVersion = [int]$Matches['version']
+$versionString = $versionMatch.Groups['version'].Value
+if ($versionString -match '^1\.(?<legacyMajor>\d+)') {
+    $javaVersion = [int]$Matches['legacyMajor']
+} elseif ($versionString -match '^(?<major>\d+)') {
+    $javaVersion = [int]$Matches['major']
+} else {
+    Write-Error "Could not parse Java version '$versionString'. Install Java 17 or newer."
+    exit 1
+}
 if ($javaVersion -lt 17) {
-    Write-Error "Java 17 or newer is required (found Java $javaVersion)."
+    Write-Error "Java 17 or newer is required (found Java $versionString). Install a JDK 17+ and make sure its bin folder comes first on PATH."
     exit 1
 }
 
