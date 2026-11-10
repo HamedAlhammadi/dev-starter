@@ -5,9 +5,28 @@ const count = document.querySelector("#task-count");
 const emptyState = document.querySelector("#empty-state");
 const status = document.querySelector("#status");
 const filters = [...document.querySelectorAll(".filter")];
+const themeToggle = document.querySelector("#theme-toggle");
 
 let tasks = [];
 let activeFilter = "all";
+
+function setTheme(theme) {
+  const isLight = theme === "light";
+  document.documentElement.dataset.theme = isLight ? "light" : "dark";
+  themeToggle.setAttribute("aria-label", `Switch to ${isLight ? "dark" : "light"} theme`);
+  themeToggle.title = `Switch to ${isLight ? "dark" : "light"} theme`;
+  themeToggle.querySelector(".theme-label").textContent = isLight ? "Dark" : "Light";
+  themeToggle.querySelector("[aria-hidden]").textContent = isLight ? "☾" : "☀";
+  document.querySelector('meta[name="theme-color"]').content = isLight ? "#f4f6f1" : "#10131c";
+  try { localStorage.setItem("focusboard-theme", isLight ? "light" : "dark"); } catch { /* Storage may be disabled. */ }
+}
+
+let savedTheme = "dark";
+try { savedTheme = localStorage.getItem("focusboard-theme") || "dark"; } catch { /* Use the default theme. */ }
+setTheme(savedTheme);
+themeToggle.addEventListener("click", () => {
+  setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+});
 
 async function request(path, options = {}) {
   const response = await fetch(path, options);
