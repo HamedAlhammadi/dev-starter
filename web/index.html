@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131c">
+  <title>FocusBoard — a calm place for your tasks</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="board">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="FocusBoard home"><span class="brand-mark">F</span> FocusBoard</a>
+      <span class="local-badge"><span></span> Saved locally</span>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">MAKE SPACE TO FOCUS</p>
+      <h1 id="page-title">Your day,<br><span>in good order.</span></h1>
+      <p class="subtitle">A simple place to keep your next steps moving.</p>
+    </section>
+
+    <section class="task-panel" aria-label="Task list">
+      <form id="task-form" class="task-form">
+        <label class="visually-hidden" for="task-input">Add a task</label>
+        <input id="task-input" name="title" maxlength="200" placeholder="What needs your attention?" autocomplete="off" required>
+        <button type="submit" class="add-button"><span aria-hidden="true">＋</span> Add task</button>
+      </form>
+      <div class="list-heading">
+        <h2>Tasks <span id="task-count" class="count">0</span></h2>
+        <div class="filters" role="group" aria-label="Filter tasks">
+          <button type="button" class="filter active" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="filter" data-filter="active" aria-pressed="false">To do</button>
+          <button type="button" class="filter" data-filter="completed" aria-pressed="false">Done</button>
+        </div>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <ul id="task-list" class="task-list"></ul>
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon" aria-hidden="true">✳</div>
+        <strong id="empty-title">A fresh start.</strong>
+        <span id="empty-copy">Add a task above and make today count.</span>
+      </div>
+      <footer class="panel-footer"><span>Small steps add up.</span><span>One thing at a time <span aria-hidden="true">↗</span></span></footer>
+    </section>
+    <p class="page-note">Private by design. Your tasks stay on this computer.</p>
+  </main>
+</body>
+</html>
