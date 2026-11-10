@@ -1,39 +1,20 @@
 # FocusBoard
 
-A small, local-first task planner you can run in your browser. Add tasks, mark them complete, and remove them; your list is saved on your computer between runs.
+A small task planner that runs directly in your browser. Add tasks, mark them complete, filter the list, delete tasks, and switch themes. Tasks and theme preference are saved in your browser on this device.
 
-## Requirements
+## Run on Windows
 
-- Java 17 or newer (including the JDK, which provides `javac`)
-- A modern browser
+No Java, Node.js, Python, or other runtime is required. You only need Windows PowerShell and a modern browser.
 
-No frameworks, package managers, or external dependencies required.
-
-## Run it
-
-### Windows Terminal (PowerShell)
-
-From the repository root, run:
+From the repository root in Windows Terminal (PowerShell), run:
 
 ```powershell
 .\scripts\run.ps1
 ```
 
-Then open <http://localhost:8080>. Press `Ctrl+C` in the terminal to stop the server. Tasks are stored in `data/tasks.txt`.
+This opens the app in your default browser. You can also open `web/index.html` directly. Your tasks are saved in that browser's local storage; clearing browser data or switching browsers may remove or hide them.
 
-To use another port:
-
-```powershell
-.\scripts\run.ps1 -Port 9090
-```
-
-If PowerShell blocks the script, run this once in the current terminal, then retry:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
-
-### macOS, Linux, or Git Bash
+## Run on macOS or Linux
 
 From the repository root:
 
@@ -41,21 +22,20 @@ From the repository root:
 ./scripts/run.sh
 ```
 
-To use another port:
+This opens the app in your default browser. If your desktop environment has no browser opener configured, open `web/index.html` manually.
 
-```bash
-PORT=9090 ./scripts/run.sh
-```
+## Features
 
-## What’s inside
+- Create, complete, filter, and delete tasks
+- Dark/light theme toggle with saved preference
+- Responsive layout and accessible controls
+- Browser-local persistence; no account or external service needed
 
-- `src/main/java/dev/focusboard/FocusBoardServer.java` — Java HTTP server, API, and local persistence
-- `web/` — plain HTML, CSS, and JavaScript interface
-- `scripts/run.ps1` — Windows PowerShell launcher
-- `scripts/run.sh` — macOS/Linux/Git Bash launcher
+## Project files
 
-The API supports listing tasks (`GET /api/tasks`), adding one (`POST /api/tasks` with form field `title`), toggling completion (`PATCH /api/tasks/{id}`), and deleting (`DELETE /api/tasks/{id}`).
+- `web/` — app interface and functionality (HTML, CSS, JavaScript)
+- `scripts/run.ps1` — opens the app from Windows PowerShell
+- `scripts/run.sh` — opens the app on macOS/Linux
+- `src/main/java/` — optional Java server implementation, not needed to use the browser app
 
-## Notes
-
-The server binds to `127.0.0.1` so the app is only available on your own computer by default. Keep the terminal open while using it. To reset your list, stop the server and remove `data/tasks.txt`.
+The optional Java server requires JDK 17 or newer. The browser app does not depend on it.

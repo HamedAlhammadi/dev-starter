@@ -6,9 +6,24 @@ const emptyState = document.querySelector("#empty-state");
 const status = document.querySelector("#status");
 const filters = [...document.querySelectorAll(".filter")];
 const themeToggle = document.querySelector("#theme-toggle");
+const TASKS_KEY = "focusboard-tasks";
+const THEME_KEY = "focusboard-theme";
 
 let tasks = [];
 let activeFilter = "all";
+
+try {
+  const storedTasks = JSON.parse(localStorage.getItem(TASKS_KEY) || "[]");
+  if (Array.isArray(storedTasks)) tasks = storedTasks;
+} catch { /* Start with an empty list if stored data is unavailable or invalid. */ }
+
+function saveTasks() {
+  try {
+    localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+  } catch {
+    announce("Could not save tasks in this browser. Check its storage settings.");
+  }
+}
 
 function setTheme(theme) {
   const isLight = theme === "light";
@@ -18,22 +33,15 @@ function setTheme(theme) {
   themeToggle.querySelector(".theme-label").textContent = isLight ? "Dark" : "Light";
   themeToggle.querySelector("[aria-hidden]").textContent = isLight ? "☾" : "☀";
   document.querySelector('meta[name="theme-color"]').content = isLight ? "#f4f6f1" : "#10131c";
-  try { localStorage.setItem("focusboard-theme", isLight ? "light" : "dark"); } catch { /* Storage may be disabled. */ }
+  try { localStorage.setItem(THEME_KEY, isLight ? "light" : "dark"); } catch { /* Theme still works for this page view. */ }
 }
 
 let savedTheme = "dark";
-try { savedTheme = localStorage.getItem("focusboard-theme") || "dark"; } catch { /* Use the default theme. */ }
+try { savedTheme = localStorage.getItem(THEME_KEY) || "dark"; } catch { /* Use the default theme. */ }
 setTheme(savedTheme);
 themeToggle.addEventListener("click", () => {
   setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
 });
-
-async function request(path, options = {}) {
-  const response = await fetch(path, options);
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "The request could not be completed.");
-  return data;
-}
 
 function announce(message) {
   status.textContent = message;
@@ -68,7 +76,11 @@ function render() {
     toggle.setAttribute("aria-label", task.completed ? `Mark ${task.title} as to do` : `Complete ${task.title}`);
     toggle.setAttribute("aria-pressed", String(task.completed));
     toggle.textContent = task.completed ? "✓" : "";
-    toggle.addEventListener("click", () => changeTask(task.id));
+    toggle.addEventListener("click", () => {
+      task.completed = !task.completed;
+      saveTasks();
+      render();
+    });
 
     const title = document.createElement("span");
     title.className = "task-title";
@@ -79,68 +91,40 @@ function render() {
     remove.type = "button";
     remove.setAttribute("aria-label", `Delete ${task.title}`);
     remove.textContent = "×";
-    remove.addEventListener("click", () => deleteTask(task.id));
+    remove.addEventListener("click", () => {
+      tasks = tasks.filter((item) => item.id !== task.id);
+      saveTasks();
+      render();
+      announce("Task deleted.");
+    });
 
     item.append(toggle, title, remove);
     list.append(item);
   }
 }
 
-async function loadTasks() {
-  try {
-    tasks = await request("/api/tasks");
-    render();
-  } catch (error) {
-    announce(`${error.message} Is the FocusBoard server still running?`);
-  }
-}
-
-async function changeTask(id) {
-  try {
-    tasks = await request(`/api/tasks/${id}`, { method: "PATCH" });
-    render();
-  } catch (error) {
-    announce(error.message);
-  }
-}
-
-async function deleteTask(id) {
-  try {
-    tasks = await request(`/api/tasks/${id}`, { method: "DELETE" });
-    render();
-    announce("Task deleted.");
-  } catch (error) {
-    announce(error.message);
-  }
-}
-
-form.addEventListener("submit", async (event) => {
+form.addEventListener("submit", (event) => {
   event.preventDefault();
   const title = input.value.trim();
   if (!title) return;
-  const button = form.querySelector("button");
-  button.disabled = true;
-  try {
-    tasks = await request("/api/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body: new URLSearchParams({ title }),
-    });
-    input.value = "";
-    activeFilter = "all";
-    filters.forEach((filter) => {
-      const selected = filter.dataset.filter === activeFilter;
-      filter.classList.toggle("active", selected);
-      filter.setAttribute("aria-pressed", String(selected));
-    });
-    render();
-    announce("Task added.");
-    input.focus();
-  } catch (error) {
-    announce(error.message);
-  } finally {
-    button.disabled = false;
-  }
+
+  tasks.unshift({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    title,
+    completed: false,
+    createdAt: new Date().toISOString(),
+  });
+  saveTasks();
+  input.value = "";
+  activeFilter = "all";
+  filters.forEach((filter) => {
+    const selected = filter.dataset.filter === activeFilter;
+    filter.classList.toggle("active", selected);
+    filter.setAttribute("aria-pressed", String(selected));
+  });
+  render();
+  announce("Task added.");
+  input.focus();
 });
 
 filters.forEach((filter) => {
@@ -155,4 +139,4 @@ filters.forEach((filter) => {
   });
 });
 
-loadTasks();
+render();
